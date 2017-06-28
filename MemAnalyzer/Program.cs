@@ -28,43 +28,47 @@ namespace MemAnalyzer
         const string DacCollection = "https://1drv.ms/f/s!AhcFq7XO98yJgoMwuPd7LNioVKAp_A";
 
         static string HelpStr = String.Format("MemAnalyzer {0} by Alois Kraus 2017", Assembly.GetExecutingAssembly().GetName().Version) + Environment.NewLine +
-                                "Usage: MemAnalyzer [ -f DumpFile or -pid ddd [ -f2 DumpFile or -pid2 ddd ] -dts [N] or -dtn [N] or -dstrings [N] [-live] [-unit DisplayUnit] [-vmmap] ] [-gc xxx [-process xxx.exe] ] [-o Output.csv [-sep \\t] [-noexcelsep]] [[-verifydump] -procdump pidOrExe [outputDumpFileOrDir]] " + Environment.NewLine +
+                                " Usage: " + Environment.NewLine +
+                                "       MemAnalyzer [ -f DumpFile or -pid ddd [ -f2 DumpFile or -pid2 ddd ] -dts [N] or -dtn [N] or -dstrings [N] [-live] [-unit DisplayUnit] [-vmmap] ] [-o Output.csv [-sep \\t] [-noexcelsep]] [[-verifydump] -procdump [-ma or -mp] pidOrExe [outputDumpFileOrDir]] " + Environment.NewLine +
                                 "       -f fileName          Dump file to analyze." + Environment.NewLine +
                                 "       -f2 fileName         Second dump file to diff." + Environment.NewLine +
                                 "       -pid ddd             Live process to analyze." + Environment.NewLine +
                                 "       -pid2 ddd            Second live process to diff. You can also mix to compare e.g. a dump and a live process e.g. -pid2 ddd -f dump.dmp" + Environment.NewLine +
                                 "       -vmmap               Fetch from live processes VMMAP data. VMMap.exe must be in the path to work." + Environment.NewLine +
-                               $"       -dts N               Dump top N types by object size. Default for N is {TopN}." + Environment.NewLine +
+                               $"       -dts N               (default) Dump top N types by object size. Default for N is {TopN}." + Environment.NewLine +
                                $"       -dtn N               Dump top N types by object count. Default for N is {TopN}." + Environment.NewLine +
                                $"       -dstrings N          Dump top N duplicate strings and global statistics. Default for N is {TopN}." + Environment.NewLine +
-                                "         -showAddress       Show the address of one string of a given value" + Environment.NewLine +
+                                "       -showAddress         Show the address of one string of a given value" + Environment.NewLine +
                                 "       -unit DisplayUnit    DisplayUnit can be Bytes, KB, MB or GB" + Environment.NewLine +
                                 "       -live                If present only reachable (live) objects are considered in the statistics. Takes longer to calculate." + Environment.NewLine +
                                 "       -dacdir dir          If the dump file is from a machine with a different version you can tell MemAnalyzer in which directory to search for matching dac dlls." + Environment.NewLine +
                                $"                            See {DacCollection} for a collection of dac dlls from .NET 2.0 up to 4.7." + Environment.NewLine +
-                                " Dump Creation  " + Environment.NewLine + 
+                                " Dump Creation: " + Environment.NewLine +
                                 "       -procdump args       Create a memory dump and VMMap snapshot of a process. Needs procdump.exe and vmmap.exe in the path to work." + Environment.NewLine +
                                 "       -verifydump          Used with -procdump. This checks the managed heap for consistency to be sure that it can be loaded later" + Environment.NewLine +
-                                " CSV Output " + Environment.NewLine +
+                                "       -ma                  Used with -procdump. Creates a full dump" + Environment.NewLine +
+                                "       -mp                  Used with -procdump. Creates a mini dump" + Environment.NewLine +
+                                " CSV Output: " + Environment.NewLine +
                                 "       -o output.csv        Write output to csv file instead of console" + Environment.NewLine +
                                 "       -overwrite           Overwrite CSV output if file already exist. Otherwise it is appended." + Environment.NewLine +
-                                "       -timefmt \"xxx\"       xxx can be Invariant or a .NET DateTime format string for CSV output. See https://msdn.microsoft.com/en-us/library/8kb3ddd4(v=vs.110).aspx" + Environment.NewLine + 
+                                "       -timefmt \"xxx\"       xxx can be Invariant or a .NET DateTime format string for CSV output. See https://msdn.microsoft.com/en-us/library/8kb3ddd4(v=vs.110).aspx" + Environment.NewLine +
                                 "       -context \"xxx\"       Additional context which is added to the context column. Useful for test reporting to e.g. add test run number to get a metric how much it did leak per test run" + Environment.NewLine +
                                 "       -sep \"x\"             CSV separator character. Default is tab." + Environment.NewLine +
-                                "       -noexcelsep          By default write sep= to make things easier when working with Excel. When set sep= is not added to CSV output" + Environment.NewLine + 
-                                "       -renameProc xxx.xml  Optional xml file which contains executable and command line substrings to rename processes based on their command line to get better names." + Environment.NewLine  +
-                                " Return Value: If -dts/dtn is used it will return the allocated managed memory in KB." + Environment.NewLine +
-                                "               If additionally -vmmap is present it will return allocated Managed Heap + Heap + Private + Shareable + File Mappings." + Environment.NewLine +
-                                "               That enables leak detection during automated tests which can then e.g. enable allocation profiling on demand." + Environment.NewLine  +
-                                "Examples" + Environment.NewLine +
-                                "Dump types by size from dump file." + Environment.NewLine +
-                                "\tMemAnalyzer -f xx.dmp -dts" + Environment.NewLine +
-                                "Dump types by object count from a running process with process id ddd." + Environment.NewLine +
-                                "\tMemAnalyzer -pid ddd -dtn" + Environment.NewLine +
-                                "Diff two memory dump files where (f2 - f) are calculated." + Environment.NewLine +
-                                "\tMemAnalyzer -f dump1.dmp -f2 dump2.dmp -dts" + Environment.NewLine +
-                                "Dump string duplicates of live process and write it to CSV file" + Environment.NewLine +
-                                "\tMemAnalyzer -pid ddd -dstrings -o StringDuplicates.csv" + Environment.NewLine;
+                                "       -noexcelsep          By default write sep= to make things easier when working with Excel. When set sep= is not added to CSV output" + Environment.NewLine +
+                                "       -renameProc xxx.xml  Optional xml file which contains executable and command line substrings to rename processes based on their command line to get better names." + Environment.NewLine +
+                                " Return Value: " + Environment.NewLine +
+                                "       If -dts/dtn is used it will return the allocated managed memory in KB." + Environment.NewLine +
+                                "       If additionally -vmmap is present it will return allocated Managed Heap + Heap + Private + Shareable + File Mappings." + Environment.NewLine +
+                                "       That enables leak detection during automated tests which can then e.g. enable allocation profiling on demand." + Environment.NewLine +
+                                " Examples: " + Environment.NewLine +
+                                "       Dump types by size from dump file:" + Environment.NewLine +
+                                "          MemAnalyzer -f xx.dmp -dts" + Environment.NewLine +
+                                "       Dump types by object count from a running process with process id ddd:" + Environment.NewLine +
+                                "          MemAnalyzer -pid ddd -dtn" + Environment.NewLine +
+                                "       Diff two memory dump files where (f2 - f) are calculated:" + Environment.NewLine +
+                                "          MemAnalyzer -f dump1.dmp -f2 dump2.dmp -dts" + Environment.NewLine +
+                                "       Dump string duplicates of live process and write it to CSV file:" + Environment.NewLine +
+                                "          MemAnalyzer -pid ddd -dstrings -o StringDuplicates.csv" + Environment.NewLine;
 
         /// <summary>
         /// Returned by COMException if dump could not be loaded into current address space. 

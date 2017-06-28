@@ -79,26 +79,49 @@ It can show which objects use most space on the managed heap just like !DumpHeap
 
 ## Command Line Help
 
-	MemAnalyzer 2.0.0.0 by Alois Kraus 2017
-	Usage: MemAnalyzer [ -f DumpFile or -pid ddd [ -f2 DumpFile or -pid2 ddd ] -dts [N] or -dtn [N] or -dstring [N] [-live] ] [-gc xxx [-process xxx.exe]] [-o Output.csv [-sep     ]]
-		   -f fileName          Dump file to analyze.
-		   -f2 fileName         Diff Dump files
-		   -pid ddd             Live process to analyze.
-		   -pid2 ddd            Live process to diff. You can combined it to e.g. compare a live process with a dump. Subtraction is done -xxx2 - xxxx where xxx is Pid or f
-		   -dts N               Dump top N types by object size. Default for N is 20.
-		   -dtn N               Dump top N types by object count. Default for N is 20.
-		   -dstrings N          Dump top N duplicate strings and global statistics. Default for N is 20.
-		   -live                If present only reachable (live) objects are considered in the statistics. Takes longer to calculate.
-		   -gc xxx              Force GC in process with id or if xxx is not a number it is treated as a command line substring filter.
-		   -process xxx.exe     (optional) Name of executable in which a GC should happen. Must contain .exe in its name.
-		   -o output.csv        Write output to csv file instead of console
-	Examples
-	Dump types by size from dump file.
-			MemAnalyzer -f xx.dmp -dts
-	Dump types by object count from a running process with process id ddd.
-			MemAnalyzer -pid ddd -dts
-	Diff two memory dump files where (f2 - f) are calculated.
-			MemAnalyzer -f dump1.dmp -f2 dump2.dmp -dts
-	Dump string duplicates of live process and write it to CSV file
-			MemAnalyzer -pid ddd -dstrings -o StringDuplicates.csv
+	MemAnalyzer 2.4.0.0 by Alois Kraus 2017
+	Usage: 
+		 MemAnalyzer [ -f DumpFile or -pid ddd [ -f2 DumpFile or -pid2 ddd ] -dts [N] or -dtn [N] or -dstrings [N] [-live] [-unit DisplayUnit] [-vmmap] ] [-o Output.csv [-sep \     ] [-noexcelsep]] [[-verifydump] -procdump [-ma or -mp] pidOrExe [outputDumpFileOrDir]] 
+		 -f fileName          Dump file to analyze.
+		 -f2 fileName         Second dump file to diff.
+		 -pid ddd             Live process to analyze.
+		 -pid2 ddd            Second live process to diff. You can also mix to compare e.g. a dump and a live process e.g. -pid2 ddd -f dump.dmp
+		 -vmmap               Fetch from live processes VMMAP data. VMMap.exe must be in the path to work.
+		 -dts N               (default) Dump top N types by object size. Default for N is {TopN}.
+		 -dtn N               Dump top N types by object count. Default for N is {TopN}.
+		 -dstrings N          Dump top N duplicate strings and global statistics. Default for N is {TopN}.
+		 -showAddress       Show the address of one string of a given value
+		 -unit DisplayUnit    DisplayUnit can be Bytes, KB, MB or GB
+		 -live                If present only reachable (live) objects are considered in the statistics. Takes longer to calculate.
+		 -dacdir dir          If the dump file is from a machine with a different version you can tell MemAnalyzer in which directory to search for matching dac dlls.
+							  See {DacCollection} for a collection of dac dlls from .NET 2.0 up to 4.7.
+	Dump Creation:
+		 -procdump args       Create a memory dump and VMMap snapshot of a process. Needs procdump.exe and vmmap.exe in the path to work.
+		 -verifydump          Used with -procdump. This checks the managed heap for consistency to be sure that it can be loaded later
+		 -ma                  Used with -procdump. Creates a full dump
+		 -mp                  Used with -procdump. Creates a mini dump
+
+	CSV Output:
+		 -o output.csv        Write output to csv file instead of console
+		 -overwrite           Overwrite CSV output if file already exist. Otherwise it is appended.
+		 -timefmt xxx         xxx can be Invariant or a .NET DateTime format string for CSV output. See https://msdn.microsoft.com/en-us/library/8kb3ddd4(v=vs.110).aspx 
+		 -context xxx         Additional context which is added to the context column. Useful for test reporting to e.g. add test run number to get a metric how much it did leak per test run
+		 -sep x               CSV separator character. Default is tab.
+		 -noexcelsep          By default write sep= to make things easier when working with Excel. When set sep= is not added to CSV output 
+		 -renameProc xxx.xml  Optional xml file which contains executable and command line substrings to rename processes based on their command line to get better names.
+
+	Return Value:
+		 If -dts/dtn is used it will return the allocated managed memory in KB.
+		 If additionally -vmmap is present it will return allocated Managed Heap + Heap + Private + Shareable + File Mappings.
+		 That enables leak detection during automated tests which can then e.g. enable allocation profiling on demand.
+
+	Examples:
+		 Dump types by size from dump file:
+			  MemAnalyzer -f xx.dmp -dts
+		 Dump types by object count from a running process with process id ddd:
+			  MemAnalyzer -pid ddd -dtn
+		 Diff two memory dump files where (f2 - f) are calculated:
+			  MemAnalyzer -f dump1.dmp -f2 dump2.dmp -dts
+		 Dump string duplicates of live process and write it to CSV file:
+			  MemAnalyzer -pid ddd -dstrings -o StringDuplicates.csv
 
